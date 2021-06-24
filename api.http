@@ -1,0 +1,34 @@
+### echo
+get http://localhost:8080/api/echo
+
+### health
+get http://localhost:8080/api/health
+
+
+### test json
+
+post http://localhost:8080/api/test_json
+Content-Type: application/json
+
+{
+	"helloWorld": "hi."
+}
+
+### register 
+post http://localhost:8080/api/register
+Content-Type: application/json
+
+{
+	"username": "zxk7516",
+	"email": "zxk7516@foxmail.com",
+	"password": "111111"
+}
+
+### login
+post http://localhost:8080/api/login
+Content-Type: application/json
+
+{
+	"email": "zxk7516@foxmail.com",
+	"password": "111111"
+}
