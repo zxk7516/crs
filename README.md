@@ -6,6 +6,15 @@
 1.  Register
 2.  Login (Jwt)
 
+... see `api.http` for details
+
+## crates in use
+
+1.  acitx-web
+2.  sqlx
+3.  argon2
+4.  jsonwebtoken
+
 ## 安装手册
 
 1. sudo apt inst postgresql
