@@ -1,7 +1,7 @@
 use crate::{
     errors::MyError,
     password::AuthenticateUtils,
-    token::{Claims, TokenTool},
+    token::{Claims, ResToekn, TokenTool},
     PgPool,
 };
 use actix_web::{
@@ -34,7 +34,7 @@ pub async fn login_action<'key>(
     pool: web::Data<PgPool>,
     auth_utils: web::Data<AuthenticateUtils<'key>>,
     token_tool: web::Data<TokenTool<'_, '_>>,
-) -> Result<Json<GetUserLogin>, MyError> {
+) -> Result<Json<ResToekn>, MyError> {
     let user = sqlx::query_as::<_, GetUserLogin>(
         r#"select id,username,email,password,created_at from "users" where email = $1"#,
     )
@@ -47,9 +47,13 @@ pub async fn login_action<'key>(
     })?;
     // println!("{:?}", user);
     if auth_utils.verify_password(&user.password, &login_request.password) {
-        let exp = chrono::Local::now().naive_utc().timestamp_millis() + 1000 * 7 * 24 * 3600;
-        let token = token_tool.encode(&Claims { sub: user.id, exp });
-        Ok(web::Json(user))
+        let duration = 7 * 24 * 3600;
+        let exp = chrono::Local::now().naive_utc().timestamp() + duration;
+        let token = token_tool.encode(&Claims { sub: user.id, exp })?;
+        Ok(web::Json(ResToekn {
+            token,
+            expires: duration,
+        }))
     } else {
         return Err(MyError::LoginFailed);
     }
@@ -59,9 +63,5 @@ pub async fn login_action<'key>(
 mod tests {
     #[test]
     fn test_chrono() {
-        use sqlx::types::chrono::DateTime;
-        use sqlx::types::chrono::TimeZone;
-        use sqlx::types::chrono::Utc;
-        let tz = Utc;
     }
 }
