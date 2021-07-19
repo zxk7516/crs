@@ -33,13 +33,12 @@ pub async fn login_action<'key>(
             // println!("{:?}", _e);
             MyError::InternalError
         })?;
-    // println!("{:?}", user);
 
-    if user.is_none() {
-        // println!("{:?}", user);
-        return Err(MyError::InternalError);
-    }
-    let user: User = user.unwrap();
+    let user = match user {
+        Some(u) => u,
+        None => return Err(MyError::InternalError),
+    };
+    // println!("{:?}", user);
 
     if auth_utils.verify_password(&user.password, &login_request.password) {
         let duration = 7 * 24 * 3600;
