@@ -1,5 +1,5 @@
-use actix_web::{guard::Head, web::Json};
-use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
 use crate::errors::{MyError, MyResult};
@@ -49,9 +49,9 @@ pub struct ResToekn {
 
 #[cfg(test)]
 mod tests {
-    use actix_web::guard::{Head, Header};
+    
 
-    use super::*;
+    
     #[test]
     fn test() {
         // let exp = chrono::Local::now().naive_utc().timestamp_millis() + 999;
