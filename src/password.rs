@@ -24,6 +24,7 @@ impl<'key> AuthenticateUtils<'key> {
     }
 
     pub fn verify_password(&self, hashed_password: &str, input_password: &str) -> bool {
+        println!("{:?}, {:?}", hashed_password, input_password);
         let parsed_hash = PasswordHash::new(&hashed_password).unwrap();
         self.argon2
             .verify_password(&input_password.as_bytes(), &parsed_hash)
@@ -34,5 +35,19 @@ impl<'key> AuthenticateUtils<'key> {
 impl<'key> Default for AuthenticateUtils<'key> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_password_hash() {
+        let plain_password = "abc";
+        let auth = AuthenticateUtils::new();
+        let hash_password = auth.hash_password(plain_password).unwrap();
+        println!("{}", hash_password);
+        let result = auth.verify_password(&hash_password, plain_password);
+        println!("{}", result);
     }
 }

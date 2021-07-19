@@ -1,51 +1,46 @@
+use crate::models::user::User;
 use crate::{
     errors::MyError,
     password::AuthenticateUtils,
     token::{Claims, ResToekn, TokenTool},
-    PgPool,
 };
 use actix_web::{
     post,
     web::{self, Json},
 };
-use serde::{Deserialize, Serialize};
-use sqlx::types::chrono::{DateTime, Local};
+use rbatis::executor::RbatisExecutor;
+use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct LoginRequest {
     email: String,
     password: String,
 }
 
-#[derive(sqlx::FromRow, Debug, Serialize)]
-pub struct GetUserLogin {
-    id: i32,
-    username: String,
-    email: String,
-    #[serde(skip)]
-    password: String,
-    #[sqlx(rename = "created_at")]
-    created_at: DateTime<Local>,
-}
+#[html_sql(rb, "sql_mappers/sql.html")]
+async fn find_user_by_email(rb: &mut RbatisExecutor<'_>, email: &str) -> Option<User> {}
 
 #[post("/login")]
 pub async fn login_action<'key>(
     login_request: web::Json<LoginRequest>,
-    pool: web::Data<PgPool>,
     auth_utils: web::Data<AuthenticateUtils<'key>>,
     token_tool: web::Data<TokenTool<'_, '_>>,
 ) -> Result<Json<ResToekn>, MyError> {
-    let user = sqlx::query_as::<_, GetUserLogin>(
-        r#"select id,username,email,password,created_at from "users" where email = $1"#,
-    )
-    .bind(&login_request.email)
-    .fetch_one(&**pool)
-    .await
-    .map_err(|_e| {
-        // println!("error:{:?}", _e);
-        MyError::InternalError
-    })?;
+    println!("{:?}", login_request);
+    let user = find_user_by_email(&mut (&*crate::RB).into(), &login_request.email)
+        .await
+        .map_err(|_e| {
+            // println!("{:?}", _e);
+            MyError::InternalError
+        })?;
     // println!("{:?}", user);
+
+    if user.is_none() {
+        // println!("{:?}", user);
+        return Err(MyError::InternalError);
+    }
+    let user: User = user.unwrap();
+
     if auth_utils.verify_password(&user.password, &login_request.password) {
         let duration = 7 * 24 * 3600;
         let exp = chrono::Local::now().naive_utc().timestamp() + duration;
@@ -62,6 +57,5 @@ pub async fn login_action<'key>(
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_chrono() {
-    }
+    fn test_chrono() {}
 }

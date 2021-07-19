@@ -1,12 +1,16 @@
 use actix_web::{
     post,
-    web::{self, Data},
+    web::{self},
 };
+use rbatis::executor::RbatisExecutor;
 use serde::Deserialize;
 
 use crate::errors;
+use crate::errors::MyError;
+use crate::models::user::User;
 use crate::password::AuthenticateUtils;
-use crate::{errors::MyError, PgPool};
+use rbatis::core::db::db_adapter::DBExecResult;
+use rbatis::Error as RBError;
 
 #[derive(Deserialize)]
 struct RegisterRequest {
@@ -15,37 +19,51 @@ struct RegisterRequest {
     password: String,
 }
 
-#[derive(sqlx::FromRow, Debug)]
+#[derive(Debug)]
 struct GetId {
     id: i32,
+}
+
+#[html_sql(rb, "sql_mappers/sql.html")]
+async fn find_user_by_name_or_email(
+    rb: &mut RbatisExecutor<'_>,
+    email: &str,
+    username: &str,
+) -> Option<User> {
+}
+
+#[html_sql(rb, "sql_mappers/sql.html")]
+async fn save_user(
+    rb: &mut RbatisExecutor<'_>,
+    email: &str,
+    username: &str,
+    password: &str,
+) -> Result<DBExecResult, RBError> {
 }
 
 #[post("/register")]
 async fn register_action<'k>(
     register_form: web::Json<RegisterRequest>,
-    pool: Data<PgPool>,
     auth_utils: web::Data<AuthenticateUtils<'k>>,
 ) -> Result<String, MyError> {
-    let result =
-        sqlx::query_as::<_, GetId>(r#"select id from "users" where username = $1 or email = $2"#)
-            .bind(&register_form.username)
-            .bind(&register_form.email)
-            .fetch_optional(&**pool)
-            .await
-            .map_err(|_e| errors::MyError::SqlError)?;
+    let result = find_user_by_name_or_email(
+        &mut (&*crate::RB).into(),
+        &register_form.email,
+        &register_form.username,
+    )
+    .await
+    .map_err(|_e| MyError::InternalError)?;
+
     if result.is_some() {
         return Err(errors::MyError::FieldAlreadyExist);
     }
-    let hashed_password = &auth_utils.hash_password(&register_form.password)?;
-    sqlx::query(
-        r#"
-INSERT INTO "users" (username, email, password) values ($1, $2, $3) RETURNING id
-"#,
+    let hashed_password = auth_utils.hash_password(&register_form.password)?;
+    save_user(
+        &mut (&*crate::RB).into(),
+        &register_form.email,
+        &register_form.username,
+        &hashed_password,
     )
-    .bind(&register_form.username)
-    .bind(&register_form.email)
-    .bind(&hashed_password)
-    .fetch_one(&**pool)
     .await
     .map_err(|e| {
         println!("{:?}", e);
