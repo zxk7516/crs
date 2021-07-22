@@ -744,12 +744,14 @@ dependencies = [
 name = "crm-web-api"
 version = "0.1.0"
 dependencies = [
+ "actix-service",
  "actix-web",
  "argon2",
  "chrono",
  "derive_more",
  "diesel",
  "dotenv",
+ "futures",
  "jsonwebtoken",
  "lazy_static",
  "rand_core",

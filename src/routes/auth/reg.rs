@@ -1,6 +1,6 @@
 use actix_web::{
     post,
-    web::{self},
+    web::{self, Data},
 };
 use rbatis::executor::RbatisExecutor;
 use serde::Deserialize;
@@ -44,7 +44,7 @@ async fn save_user(
 #[post("/register")]
 async fn register_action<'k>(
     register_form: web::Json<RegisterRequest>,
-    auth_utils: web::Data<AuthenticateUtils<'k>>,
+    auth_utils: Data<AuthenticateUtils<'k>>,
 ) -> Result<String, MyError> {
     let result = find_user_by_name_or_email(
         &mut (&*crate::RB).into(),
@@ -66,7 +66,7 @@ async fn register_action<'k>(
     )
     .await
     .map_err(|e| {
-        println!("{:?}", e);
+        // println!("{:?}", e);
         errors::MyError::SqlError
     })?;
 

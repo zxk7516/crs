@@ -18,6 +18,8 @@ serde = {version = "1.0.126", features = ["derive"]}
 serde_json = {version = "1.0.64"}
 # sqlx = {version = "0.5", features = ["postgres", "macros", "runtime-actix-rustls", "chrono"]}
 rbatis = {version = "2.0", features = ["postgres"]}
+actix-service = "2.0.0"
+futures = "0.3.15"
 
 [dev-dependencies]
 diesel = {version = "1.4.7", features = ["postgres"]}

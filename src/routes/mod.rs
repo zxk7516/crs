@@ -5,6 +5,7 @@ use actix_web::{
 };
 use serde::{Deserialize, Serialize};
 mod auth;
+mod private;
 
 pub fn auth_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -14,6 +15,42 @@ pub fn auth_routes(cfg: &mut web::ServiceConfig) {
             .service(health)
             .service(auth::register_action)
             .service(auth::login_action),
+    );
+}
+use crate::errors::{MyError::LoginFailed, MyResult};
+use crate::token::Claims;
+
+pub fn authed_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(
+        scope("/api/datas/")
+            /*.wrap_fn(
+                |req, srv| -> () {
+                    let s = match req.headers().get("Authorization") {
+                        Some(bear_token) => bear_token,
+                        None => return Err(LoginFailed),
+                    };
+                    let token: String = s.into();
+                    let token_split = token.split_whitespace();
+                    match token_split.next() {
+                        Some(b) => {
+                            if b == "bearer" {
+                                match token_split.next() {
+                                    Some(t) => {
+                                        let token_util = req.app_data::<TokenTool>().unwrap();
+                                        let claim = token_util.decode(t)?;
+                                        Err(LoginFailed)
+                                    }
+                                    None => Err(LoginFailed),
+                                }
+                            } else {
+                                Err(LoginFailed)
+                            }
+                        }
+                        None => Err(LoginFailed),
+                    }
+                },
+            )*/
+            .service(echo),
     );
 }
 

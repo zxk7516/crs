@@ -1,39 +1,83 @@
-
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
+use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::errors::{MyError, MyResult};
 
 #[derive(Clone)]
-pub struct TokenTool<'token, 'decode> {
-    jwt_secret: &'token str,
+pub struct JwtEncoder<'a> {
     encoding_key: EncodingKey,
-    decoding_key: DecodingKey<'decode>,
-    header: Header,
-    validation: Validation,
+    header: &'a Header,
 }
 
-impl TokenTool<'_, '_> {
-    pub fn new(secret: &'static str) -> Self {
+impl<'a> JwtEncoder<'a> {
+    pub fn new(secret: &str, header: &'a Header) -> Self {
         Self {
-            jwt_secret: secret, //secret.to_string(),
             encoding_key: EncodingKey::from_secret(secret.as_ref()),
-            decoding_key: DecodingKey::from_secret(secret.as_ref()),
-            header: Header::default(),
-            validation: Validation::default(),
+            header,
         }
     }
 
+    // generate jwt token
     pub fn encode(&self, data: &Claims) -> MyResult<String> {
         encode(&self.header, &data, &self.encoding_key).map_err(|_e| MyError::InternalError)
     }
+}
 
-    pub fn decode<'a>(&self, token: &'a str) -> MyResult<Claims> {
+#[derive(Clone)]
+pub struct JwtDecoder<'a, 'v> {
+    decoding_key: DecodingKey<'a>,
+    validation: &'v Validation,
+}
+
+impl<'a, 'v> JwtDecoder<'a, 'v> {
+    pub fn new(secret: &'static str, validation: &'v Validation) -> Self {
+        Self {
+            decoding_key: DecodingKey::from_secret(secret.as_ref()),
+            validation, //: Validation::default(),
+        }
+    }
+
+    // decode jwt token string
+    pub fn decode(&self, token: &'a str) -> MyResult<Claims> {
         decode::<Claims>(token, &self.decoding_key, &self.validation)
             .map_err(|_e| MyError::TokenError)
             .map(|t| t.claims)
     }
 }
+
+//#[derive(Clone)]
+//pub struct TokenTool<'token, 'decode> {
+//    jwt_secret: &'token str,
+//    encoding_key: EncodingKey,
+//    decoding_key: DecodingKey<'decode>,
+//    header: Header,
+//    validation: Validation,
+//}
+
+//impl TokenTool<'_, '_> {
+//    pub fn new(secret: &'static str) -> Self {
+//        Self {
+//            jwt_secret: secret, //secret.to_string(),
+//            encoding_key: EncodingKey::from_secret(secret.as_ref()),
+//            decoding_key: DecodingKey::from_secret(secret.as_ref()),
+//            header: Header::default(),
+//            validation: Validation::default(),
+//        }
+//    }
+
+//   pub fn encode(&self, data: &Claims) -> MyResult<String> {
+//       encode(&self.header, &data, &self.encoding_key).map_err(|_e| MyError::InternalError)
+//   }
+
+//  #[inline]
+//  pub fn decode<'a>(&self, token: &'a str) -> MyResult<Claims> {
+//      decode::<Claims>(token, &self.decoding_key, &self.validation)
+//          .map_err(|_e| MyError::TokenError)
+//          .map(|t| t.claims)
+//  }
+//}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -49,9 +93,8 @@ pub struct ResToekn {
 
 #[cfg(test)]
 mod tests {
-    
+    use super::*;
 
-    
     #[test]
     fn test() {
         // let exp = chrono::Local::now().naive_utc().timestamp_millis() + 999;
