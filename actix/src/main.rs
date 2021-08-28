@@ -14,6 +14,7 @@ extern crate argon2;
 use actix_web::{
     web::{self, Data},
     App, HttpServer,
+    middleware::Logger,
 };
 use password::AuthenticateUtils;
 use rbatis::rbatis::Rbatis;
@@ -39,7 +40,6 @@ lazy_static! {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    dotenv::dotenv().ok();
 
     let database_url = std::env::var("DATABASE_URL").unwrap();
 

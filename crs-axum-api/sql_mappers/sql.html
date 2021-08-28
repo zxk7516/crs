@@ -1,0 +1,17 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "https://github.com/rbatis/rbatis_sql/raw/main/mybatis-3-mapper.dtd">
+<mapper>
+	<select id="find_user_by_email">
+		select id,username,email,password,created_at from "users" where email = #{email}
+	</select>
+	<select id="find_user_by_name">
+		select id,username,email,password,created_at from "users" where username = #{username}
+	</select>
+	<select id="find_user_by_name_or_email">
+		select id,username,email,password,created_at from "users" where username = #{username} or email = #{email}
+	</select>
+	<insert id="save_user">
+		insert into "users" (username, email, password) values ( #{username}, #{email}, #{password} )
+	</insert>
+
+
+</mapper>

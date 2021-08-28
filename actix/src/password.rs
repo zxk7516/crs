@@ -24,7 +24,7 @@ impl<'key> AuthenticateUtils<'key> {
     }
 
     pub fn verify_password(&self, hashed_password: &str, input_password: &str) -> bool {
-        println!("{:?}, {:?}", hashed_password, input_password);
+        println!("{:?}, {:?}", hashed_password, input_password)i;
         let parsed_hash = PasswordHash::new(&hashed_password).unwrap();
         self.argon2
             .verify_password(&input_password.as_bytes(), &parsed_hash)

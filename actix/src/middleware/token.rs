@@ -4,8 +4,34 @@ use std::task::{Context, Poll};
 
 use crate::errors::MyError;
 use actix_service::{Service, Transform};
-use actix_web::{dev::ServiceRequest, dev::ServiceResponse, Error};
+use actix_web::{dev::MessageBody, dev::ServiceRequest, dev::ServiceResponse, Error};
 use futures::future::{ok, ready};
+
+use actix_web::middleware::Logger;
+
+#[derive(Debug)]
+pub struct TokenParser();
+
+impl TokenParser {
+    fn parser() {}
+}
+
+impl Default for TokenParser {
+    fn default() -> TokenParser {
+        TokenParser()
+    }
+}
+
+impl<S, B> Transform<S, ServiceRequest> for TokenParser
+where
+    S: Service<ServiceRequest, Response = (), Error = Error>,
+    B: MessageBody,
+{
+    type Response = ServiceResponse<()>;
+    type Error = Error;
+    type InitError = ();
+    type Transform = TokenParserMiddleware<S>;
+}
 
 //#[derive(Clone)]
 //pub struct TokenParser<S, 'a> {
